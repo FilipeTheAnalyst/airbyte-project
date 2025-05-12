@@ -1,0 +1,42 @@
+version: 2
+
+sources:
+  - name: fraud
+    database: data_eng_dbt
+    schema: staging  
+    tables:
+      - name: customer_transactions
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              name: customer_transactions_row_count
+              min_value: 1
+        columns:
+          - name: transaction_id
+            data_tests:
+              - not_null
+          - name: user_id
+            data_tests:
+              - not_null
+          - name: transaction_date
+            data_tests:
+              - not_null
+          - name: amount
+            data_tests:
+              - not_null
+          
+      - name: labeled_transactions
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              name: labeled_transactions_row_count
+              min_value: 1
+        columns:
+          - name: transaction_id
+            data_tests:
+              - not_null
+              - unique
+              - relationships:
+                  to: source('fraud', 'customer_transactions')
+                  field: transaction_id
+          - name: is_fraudulent
+            data_tests:
+              - not_null
